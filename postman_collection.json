@@ -1,0 +1,99 @@
+{
+  "info": {
+    "name": "Laravel Queue Forward API",
+    "description": "API collection for testing the Laravel Queue Forward application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "your-api-key-here",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Forward Request",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-KEY",
+            "value": "{{api_key}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"forward_url\": \"https://httpbin.org/post\",\n    \"payload\": {\n        \"message\": \"Hello World\",\n        \"timestamp\": \"2026-03-10\",\n        \"data\": {\n            \"user_id\": 123,\n            \"action\": \"test\"\n        }\n    }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/forward",
+          "host": ["{{base_url}}"],
+          "path": ["api", "forward"]
+        },
+        "description": "Forward a request to a specified URL. The request will be queued and processed asynchronously."
+      },
+      "response": []
+    },
+    {
+      "name": "Forward Request with Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-API-KEY",
+            "value": "{{api_key}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"forward_url\": \"https://httpbin.org/post\",\n    \"token\": \"your-bearer-token-for-target-api\",\n    \"payload\": {\n        \"event\": \"user.created\",\n        \"data\": {\n            \"id\": 456,\n            \"name\": \"John Doe\",\n            \"email\": \"john@example.com\"\n        }\n    }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/forward",
+          "host": ["{{base_url}}"],
+          "path": ["api", "forward"]
+        },
+        "description": "Forward a request with an authorization token. The token will be sent as a Bearer token to the target URL."
+      },
+      "response": []
+    },
+    {
+      "name": "Check Request Status",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-API-KEY",
+            "value": "{{api_key}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/status/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "status", "1"]
+        },
+        "description": "Check the status of a forwarded request using its request ID."
+      },
+      "response": []
+    }
+  ]
+}

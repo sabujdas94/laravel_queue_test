@@ -1,23 +1,274 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel Queue Forward API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel application that receives API requests and forwards them to specified URLs using a Redis-backed queue system.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- ✅ API Key authentication
+- ✅ Request queuing with Redis
+- ✅ Automatic request forwarding with retry logic
+- ✅ Request status tracking
+- ✅ MySQL database for persistence
+- ✅ Support for custom authorization tokens
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requirements
+
+- PHP 8.2+
+- MySQL
+- Redis
+- Composer
+
+## Installation
+
+### 1. Start Laragon Services
+
+Make sure both MySQL and Redis are running in Laragon:
+- Open Laragon
+- Click "Start All"
+- Verify MySQL and Redis are running
+
+### 2. Create Database
+
+Create a new MySQL database named `kuldip_queue`:
+```sql
+CREATE DATABASE kuldip_queue;
+```
+
+Or use Laragon's database management tool (HeidiSQL/PhpMyAdmin).
+
+### 3. Install Dependencies
+
+```bash
+composer install
+```
+
+### 4. Configure Environment
+
+The `.env` file is already configured with:
+- MySQL connection (database: `kuldip_queue`)
+- Redis connection
+- Queue driver set to Redis
+
+### 5. Run Migrations
+
+```bash
+php artisan migrate
+```
+
+### 6. Generate API Key
+
+```bash
+php artisan apikey:generate "My Application"
+```
+
+Save the generated API key - you'll need it for API requests.
+
+## Usage
+
+### Starting the Queue Worker
+
+To process queued jobs, run:
+
+```bash
+php artisan queue:work redis --tries=3
+```
+
+Keep this running in a separate terminal window.
+
+### API Endpoints
+
+#### 1. Forward Request
+
+**Endpoint:** `POST /api/forward`
+
+**Headers:**
+```
+X-API-KEY: your-api-key-here
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+    "forward_url": "https://example.com/api/endpoint",
+    "token": "optional-bearer-token-for-target-api",
+    "payload": {
+        "key1": "value1",
+        "key2": "value2"
+    }
+}
+```
+
+**Response:**
+```json
+{
+    "success": true,
+    "message": "Request queued successfully",
+    "request_id": 1
+}
+```
+
+#### 2. Check Request Status
+
+**Endpoint:** `GET /api/status/{requestId}`
+
+**Headers:**
+```
+X-API-KEY: your-api-key-here
+```
+
+**Response:**
+```json
+{
+    "request_id": 1,
+    "status": "completed",
+    "forward_url": "https://example.com/api/endpoint",
+    "response_status": 200,
+    "error_message": null,
+    "created_at": "2026-03-10 07:09:47",
+    "processed_at": "2026-03-10 07:09:50"
+}
+```
+
+**Status Values:**
+- `pending` - Request is queued but not yet processed
+- `processing` - Request is currently being processed
+- `completed` - Request was successfully forwarded
+- `failed` - Request failed after all retry attempts
+
+### Example Usage with cURL
+
+**Forward a request:**
+```bash
+curl -X POST http://localhost/api/forward \
+  -H "X-API-KEY: sk_your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "forward_url": "https://httpbin.org/post",
+    "payload": {
+      "message": "Hello World",
+      "timestamp": "2026-03-10"
+    }
+  }'
+```
+
+**With authorization token:**
+```bash
+curl -X POST http://localhost/api/forward \
+  -H "X-API-KEY: sk_your-api-key-here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "forward_url": "https://api.example.com/webhook",
+    "token": "target-api-bearer-token",
+    "payload": {
+      "event": "user.created",
+      "data": {"id": 123, "name": "John Doe"}
+    }
+  }'
+```
+
+**Check status:**
+```bash
+curl -X GET http://localhost/api/status/1 \
+  -H "X-API-KEY: sk_your-api-key-here"
+```
+
+## Configuration
+
+### Queue Settings
+
+The queue is configured in `config/queue.php` with Redis as the default driver.
+
+**Job settings:**
+- Retry attempts: 3
+- Timeout: 120 seconds
+
+### Database Tables
+
+**api_keys**
+- Stores API keys and their metadata
+- Tracks last usage timestamp
+
+**request_logs**
+- Stores all forwarding requests
+- Tracks status, responses, and errors
+
+**jobs**
+- Laravel's default jobs table for queue management
+
+## Management Commands
+
+### Generate API Key
+```bash
+php artisan apikey:generate "Application Name"
+```
+
+### List Failed Jobs
+```bash
+php artisan queue:failed
+```
+
+### Retry Failed Jobs
+```bash
+php artisan queue:retry all
+```
+
+### Clear Failed Jobs
+```bash
+php artisan queue:flush
+```
+
+## Production Deployment
+
+### Using Laravel Horizon (Linux only)
+
+Horizon provides a dashboard for monitoring queues but requires Linux extensions.
+
+For production on Linux servers:
+```bash
+composer require laravel/horizon
+php artisan horizon:install
+php artisan horizon
+```
+
+Access the dashboard at: `http://your-domain.com/horizon`
+
+### Using Supervisor (Recommended for Production)
+
+Create a supervisor configuration to keep the queue worker running:
+
+```ini
+[program:laravel-queue-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /path/to/artisan queue:work redis --tries=3 --timeout=120
+autostart=true
+autorestart=true
+user=www-data
+numprocs=3
+redirect_stderr=true
+stdout_logfile=/path/to/storage/logs/worker.log
+```
+
+## Troubleshooting
+
+### Queue not processing
+- Ensure Redis is running
+- Verify the queue worker is running: `php artisan queue:work`
+- Check logs in `storage/logs/`
+
+### Database connection refused
+- Start MySQL in Laragon
+- Verify database credentials in `.env`
+- Ensure database `kuldip_queue` exists
+
+### API Key not working
+- Verify the API key is correct
+- Check that `is_active` is true in the `api_keys` table
+- Ensure you're sending the key in the `X-API-KEY` header
+
+## License
+
+This project is open-sourced software licensed under the MIT license.
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 

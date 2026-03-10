@@ -47,7 +47,7 @@
       "response": []
     },
     {
-      "name": "Forward Request with Token",
+      "name": "Forward Request with Headers",
       "request": {
         "method": "POST",
         "header": [
@@ -64,14 +64,14 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"forward_url\": \"https://httpbin.org/post\",\n    \"token\": \"your-bearer-token-for-target-api\",\n    \"payload\": {\n        \"event\": \"user.created\",\n        \"data\": {\n            \"id\": 456,\n            \"name\": \"John Doe\",\n            \"email\": \"john@example.com\"\n        }\n    }\n}"
+          "raw": "{\n    \"forward_url\": \"https://httpbin.org/post\",\n    \"header\": {\n        \"Authorization\": \"Bearer your-token-here\",\n        \"X-Custom-Header\": \"custom-value\"\n    },\n    \"payload\": {\n        \"event\": \"user.created\",\n        \"data\": {\n            \"id\": 456,\n            \"name\": \"John Doe\",\n            \"email\": \"john@example.com\"\n        }\n    }\n}"
         },
         "url": {
           "raw": "{{base_url}}/api/forward",
           "host": ["{{base_url}}"],
           "path": ["api", "forward"]
         },
-        "description": "Forward a request with an authorization token. The token will be sent as a Bearer token to the target URL."
+        "description": "Forward a request with custom headers. The headers will be applied to the HTTP request sent to the target URL."
       },
       "response": []
     },

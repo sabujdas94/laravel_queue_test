@@ -22,7 +22,7 @@ class ForwardRequestJob implements ShouldQueue
         public int $requestLogId,
         public string $forwardUrl,
         public array $payload,
-        public ?string $token = null
+        public array $headers = []
     ) {
         //
     }
@@ -41,9 +41,9 @@ class ForwardRequestJob implements ShouldQueue
             // Prepare HTTP request
             $request = Http::timeout($this->timeout);
 
-            // Add authorization token if provided
-            if ($this->token) {
-                $request = $request->withToken($this->token);
+            // Add custom headers if provided
+            if (!empty($this->headers)) {
+                $request = $request->withHeaders($this->headers);
             }
 
             // Forward the request
@@ -59,11 +59,11 @@ class ForwardRequestJob implements ShouldQueue
                     'processed_at' => now(),
                 ]);
 
-            Log::info('Request forwarded successfully', [
-                'request_log_id' => $this->requestLogId,
-                'forward_url' => $this->forwardUrl,
-                'status' => $response->status(),
-            ]);
+            // Log::info('Request forwarded successfully', [
+            //     'request_log_id' => $this->requestLogId,
+            //     'forward_url' => $this->forwardUrl,
+            //     'status' => $response->status(),
+            // ]);
 
         } catch (\Exception $e) {
             // Log the error

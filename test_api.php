@@ -78,7 +78,7 @@ if (isset($responseData['request_id'])) {
 }
 
 // Test 3: Forward with authorization token
-echo "\n\nTest 3: Forwarding with authorization token...\n";
+echo "\n\nTest 3: Forwarding with custom headers...\n";
 
 $ch = curl_init("$baseUrl/api/forward");
 curl_setopt_array($ch, [
@@ -90,7 +90,10 @@ curl_setopt_array($ch, [
     ],
     CURLOPT_POSTFIELDS => json_encode([
         'forward_url' => 'https://httpbin.org/bearer',
-        'token' => 'test-bearer-token-12345',
+        'header' => [
+            'Authorization' => 'Bearer test-token-12345',
+            'X-Custom-Header' => 'custom-value',
+        ],
         'payload' => [
             'event' => 'test.event',
             'data' => [

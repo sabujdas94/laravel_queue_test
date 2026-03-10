@@ -9,7 +9,7 @@ A Laravel application that receives API requests and forwards them to specified 
 - ✅ Automatic request forwarding with retry logic
 - ✅ Request status tracking
 - ✅ MySQL database for persistence
-- ✅ Support for custom authorization tokens
+- ✅ Support for custom HTTP headers
 
 ## Requirements
 
@@ -91,7 +91,10 @@ Content-Type: application/json
 ```json
 {
     "forward_url": "https://example.com/api/endpoint",
-    "token": "optional-bearer-token-for-target-api",
+    "header": {
+        "Authorization": "Bearer your-token-here",
+        "X-Custom-Header": "custom-value"
+    },
     "payload": {
         "key1": "value1",
         "key2": "value2"
@@ -152,14 +155,17 @@ curl -X POST http://localhost/api/forward \
   }'
 ```
 
-**With authorization token:**
+**With custom headers:**
 ```bash
 curl -X POST http://localhost/api/forward \
   -H "X-API-KEY: sk_your-api-key-here" \
   -H "Content-Type: application/json" \
   -d '{
     "forward_url": "https://api.example.com/webhook",
-    "token": "target-api-bearer-token",
+    "header": {
+      "Authorization": "Bearer target-api-token",
+      "X-Webhook-Secret": "secret123"
+    },
     "payload": {
       "event": "user.created",
       "data": {"id": 123, "name": "John Doe"}

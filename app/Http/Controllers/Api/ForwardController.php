@@ -18,7 +18,7 @@ class ForwardController extends Controller
         // Validate the request
         $validator = Validator::make($request->all(), [
             'forward_url' => 'required|url',
-            'token' => 'nullable|string',
+            'header' => 'nullable|array',
             'payload' => 'required|array',
         ]);
 
@@ -50,7 +50,7 @@ class ForwardController extends Controller
                 $requestLogId,
                 $request->input('forward_url'),
                 $request->input('payload'),
-                $request->input('token')
+                $request->input('header', [])
             );
 
             return response()->json([
